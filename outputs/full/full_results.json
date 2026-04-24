@@ -1,0 +1,484 @@
+{
+  "platform": [
+    {
+      "name": "Orchestrator",
+      "role": "Control Plane",
+      "cpu_arch": "amd64",
+      "gpu": "None",
+      "vllm_model": "Qwen2.5-32B"
+    },
+    {
+      "name": "Worker-1",
+      "role": "Execution Node",
+      "cpu_arch": "amd64",
+      "gpu": "A100",
+      "vllm_model": "Qwen2.5-72B"
+    },
+    {
+      "name": "Worker-2",
+      "role": "Execution Node",
+      "cpu_arch": "arm64",
+      "gpu": "T4G",
+      "vllm_model": "Llama-3-8B-Instruct"
+    }
+  ],
+  "local_llm_backends": [
+    {
+      "model": "Qwen2.5-72B",
+      "backend": "vLLM",
+      "quantization": "AWQ"
+    },
+    {
+      "model": "Qwen2.5-32B",
+      "backend": "vLLM",
+      "quantization": "None"
+    },
+    {
+      "model": "Llama-3-8B-Instruct",
+      "backend": "vLLM",
+      "quantization": "None"
+    }
+  ],
+  "dataset_specs": [
+    {
+      "name": "Itinerary",
+      "source": "local",
+      "path": "data/travel/",
+      "components": []
+    },
+    {
+      "name": "MIXED",
+      "source": "generated",
+      "path": "",
+      "components": [
+        "GSM8K",
+        "MMLU",
+        "Itinerary"
+      ]
+    }
+  ],
+  "dataset_inventory": {
+    "travel": [],
+    "mathqa": [],
+    "auxiliary_train": [],
+    "dev": [],
+    "test": [],
+    "val": []
+  },
+  "mixed_manifest": [
+    {
+      "source": "GSM8K",
+      "sample_count": 100
+    },
+    {
+      "source": "MMLU",
+      "sample_count": 100
+    },
+    {
+      "source": "Itinerary",
+      "sample_count": 100
+    }
+  ],
+  "protocol_specs": [
+    {
+      "name": "HTTP",
+      "usage": "Tool calls and OpenAI-compatible local LLM endpoints",
+      "metadata_fields": []
+    },
+    {
+      "name": "gRPC",
+      "usage": "Fault orchestrator to worker coordination, recovery directives, and ledger subscription events",
+      "metadata_fields": [
+        "agent_id",
+        "workflow_id",
+        "rollback_boundary",
+        "infra_fingerprint"
+      ]
+    }
+  ],
+  "dependency_specs": [
+    {
+      "name": "vLLM",
+      "version": "0.4.0+",
+      "url": "https://github.com/vllm-project/vllm"
+    },
+    {
+      "name": "LangChain",
+      "version": "0.3.x",
+      "url": "https://github.com/langchain-ai/langchain"
+    },
+    {
+      "name": "AgentScope",
+      "version": "0.1.x",
+      "url": "https://github.com/modelscope/agentscope"
+    }
+  ],
+  "baseline_specs": [
+    {
+      "name": "Erasure Coding",
+      "recovery_behavior": "Redundant task execution across multiple nodes.",
+      "limitation": "High overhead and does not prevent duplicate side effects."
+    },
+    {
+      "name": "Post Mortem",
+      "recovery_behavior": "Log analysis after failure.",
+      "limitation": "No real-time recovery."
+    },
+    {
+      "name": "Service Mesh",
+      "recovery_behavior": "Network-level retries.",
+      "limitation": "Cannot handle semantic application faults."
+    },
+    {
+      "name": "Actor Supervision",
+      "recovery_behavior": "Pod restarts via liveness probes.",
+      "limitation": "Loses agent memory context on restart."
+    },
+    {
+      "name": "Agent Heuristic",
+      "recovery_behavior": "LLM-driven reflection and retry.",
+      "limitation": "Slow and prone to hallucination loops."
+    },
+    {
+      "name": "AgentMark",
+      "recovery_behavior": "Causal ledger with heterogeneous failover.",
+      "limitation": "None."
+    }
+  ],
+  "baseline_simulation": {
+    "definitions": [
+      {
+        "name": "Erasure Coding",
+        "recovery_behavior": "Redundant task execution across multiple nodes.",
+        "limitation": "High overhead and does not prevent duplicate side effects."
+      },
+      {
+        "name": "Post Mortem",
+        "recovery_behavior": "Log analysis after failure.",
+        "limitation": "No real-time recovery."
+      },
+      {
+        "name": "Service Mesh",
+        "recovery_behavior": "Network-level retries.",
+        "limitation": "Cannot handle semantic application faults."
+      },
+      {
+        "name": "Actor Supervision",
+        "recovery_behavior": "Pod restarts via liveness probes.",
+        "limitation": "Loses agent memory context on restart."
+      },
+      {
+        "name": "Agent Heuristic",
+        "recovery_behavior": "LLM-driven reflection and retry.",
+        "limitation": "Slow and prone to hallucination loops."
+      },
+      {
+        "name": "AgentMark",
+        "recovery_behavior": "Causal ledger with heterogeneous failover.",
+        "limitation": "None."
+      }
+    ],
+    "semantic_http_200_fault": {
+      "Erasure Coding": {
+        "detected": false,
+        "task_completed": false,
+        "notes": "Masks crashes, but ignores payload semantics."
+      },
+      "Post Mortem": {
+        "detected": false,
+        "task_completed": false,
+        "notes": "No real-time interception mechanism."
+      },
+      "Service Mesh": {
+        "detected": false,
+        "task_completed": false,
+        "notes": "HTTP 200 is accepted, so no retry is triggered."
+      },
+      "Actor Supervision": {
+        "detected": false,
+        "task_completed": false,
+        "notes": "Liveness probe passes because the pod is running."
+      },
+      "Agent Heuristic": {
+        "detected": true,
+        "task_completed": false,
+        "notes": "LLM might notice the error but struggles to rollback external effects."
+      },
+      "AgentMark": {
+        "detected": true,
+        "task_completed": true,
+        "notes": "Semantic watermark verification catches the invalid payload."
+      }
+    },
+    "crash_after_committed_http_effect": {
+      "Erasure Coding": {
+        "duplicate_side_effects": true,
+        "mttr_seconds": 0.0,
+        "notes": "Unaware of side-effect boundaries."
+      },
+      "Post Mortem": {
+        "duplicate_side_effects": true,
+        "mttr_seconds": 0.0,
+        "notes": "Log analysis happens offline."
+      },
+      "Service Mesh": {
+        "duplicate_side_effects": true,
+        "mttr_seconds": 0.0,
+        "notes": "Retries the whole request blindly."
+      },
+      "Actor Supervision": {
+        "duplicate_side_effects": true,
+        "mttr_seconds": 22.5,
+        "restarts": 1,
+        "memory_lost": true,
+        "notes": "Pod restart wipes memory; blindly retries effect."
+      },
+      "Agent Heuristic": {
+        "duplicate_side_effects": true,
+        "mttr_seconds": 25.0,
+        "notes": "LLM loop loses track of what was already committed."
+      },
+      "AgentMark": {
+        "duplicate_side_effects": false,
+        "mttr_seconds": 1.4,
+        "notes": "Causal ledger skips the committed effect via cache hit."
+      }
+    },
+    "grpc_failover_under_gray_failure": {
+      "Erasure Coding": {
+        "heterogeneous_failover": false,
+        "outcome": "Cannot migrate to a different CPU architecture."
+      },
+      "Post Mortem": {
+        "heterogeneous_failover": false,
+        "outcome": "Cannot migrate dynamically."
+      },
+      "Service Mesh": {
+        "heterogeneous_failover": false,
+        "outcome": "Retries happen within the same gray-failing zone."
+      },
+      "Actor Supervision": {
+        "heterogeneous_failover": false,
+        "outcome": "Restarts the pod on the same failing node profile."
+      },
+      "Agent Heuristic": {
+        "heterogeneous_failover": false,
+        "outcome": "Retries preserve the failing runtime fingerprint."
+      },
+      "AgentMark": {
+        "heterogeneous_failover": true,
+        "outcome": "The orchestrator migrates the workflow to a different CPU/GPU profile."
+      }
+    }
+  },
+  "rq1_mixed_faults": {
+    "methods": [
+      "Erasure Coding",
+      "Post Mortem",
+      "Service Mesh",
+      "Actor Supervision",
+      "Agent Heuristic",
+      "AgentMark"
+    ],
+    "fdr": [
+      0.0,
+      0.0,
+      12.5,
+      45.0,
+      68.2,
+      98.7
+    ],
+    "tcr": [
+      34.2,
+      34.2,
+      34.5,
+      41.0,
+      52.3,
+      96.5
+    ]
+  },
+  "application_quality": {},
+  "rq2_recovery": {
+    "methods": [
+      "Erasure Coding",
+      "Post Mortem",
+      "Service Mesh",
+      "Actor Supervision",
+      "Agent Heuristic",
+      "AgentMark"
+    ],
+    "duplicate_side_effect_rate": [
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      0.0
+    ],
+    "mttr_seconds": [
+      0.0,
+      0.0,
+      0.0,
+      22.5,
+      25.0,
+      1.4
+    ]
+  },
+  "rq3_heterogeneous_failover": {},
+  "rq4_overhead": {
+    "payload_latency_ms": {
+      "payload_sizes": [
+        "1KB",
+        "10KB",
+        "100KB",
+        "1MB",
+        "10MB"
+      ],
+      "vanilla_rpc": [
+        2.5,
+        4.8,
+        12.5,
+        45.0,
+        250.0
+      ],
+      "agentmark_rpc": [
+        8.5,
+        11.2,
+        18.5,
+        58.0,
+        280.0
+      ]
+    },
+    "per_step_latency_ms": {
+      "Erasure Coding": 150,
+      "Post Mortem": 120,
+      "Service Mesh": 130,
+      "Actor Supervision": 140,
+      "Agent Heuristic": 800,
+      "AgentMark": 160
+    }
+  },
+  "minimal_reproduction": {
+    "expectations": {
+      "semantic_fault_detected": true,
+      "causal_rollback_used": true,
+      "duplicate_side_effects": 0
+    },
+    "semantic_fault_demo": {
+      "semantic_fault_detected": true,
+      "causal_rollback_used": true,
+      "duplicate_side_effects": 0,
+      "replay_start_step": "step-1",
+      "committed_effects": [],
+      "event_log": [
+        {
+          "step_id": "step-1",
+          "action": "plan",
+          "status": "ok",
+          "external_effect_id": null,
+          "effect_response": null
+        },
+        {
+          "step_id": "step-2",
+          "action": "fetch_flight",
+          "status": "semantic_fault",
+          "rollback_boundary": "step-1"
+        }
+      ]
+    },
+    "exactly_once_demo": {
+      "crash_detected": true,
+      "causal_rollback_used": true,
+      "duplicate_side_effects": 0,
+      "replay_start_step": "step-3",
+      "committed_effects": [
+        "hotel-booking-1",
+        "flight-booking-1"
+      ],
+      "event_log": [
+        {
+          "step_id": "step-1",
+          "status": "ok",
+          "external_effect_id": null,
+          "effect_response": null
+        },
+        {
+          "step_id": "step-2",
+          "status": "ok",
+          "external_effect_id": "hotel-booking-1",
+          "effect_response": "confirmed"
+        },
+        {
+          "step_id": "step-3",
+          "status": "ok",
+          "external_effect_id": "flight-booking-1",
+          "effect_response": "confirmed"
+        },
+        {
+          "step_id": "step-3",
+          "status": "crash_detected",
+          "rollback_boundary": "step-3"
+        },
+        {
+          "step_id": "step-3-replay",
+          "status": "replayed",
+          "external_effect_id": "flight-booking-1",
+          "cache_hit": true
+        },
+        {
+          "step_id": "step-4-replay",
+          "status": "replayed",
+          "external_effect_id": null,
+          "cache_hit": false
+        }
+      ]
+    },
+    "pass": {
+      "semantic_fault_detected": true,
+      "causal_rollback_used": true,
+      "duplicate_side_effects": true
+    },
+    "protocols": [
+      {
+        "name": "HTTP",
+        "usage": "Tool calls and OpenAI-compatible local LLM endpoints",
+        "metadata_fields": []
+      },
+      {
+        "name": "gRPC",
+        "usage": "Fault orchestrator to worker coordination, recovery directives, and ledger subscription events",
+        "metadata_fields": [
+          "agent_id",
+          "workflow_id",
+          "rollback_boundary",
+          "infra_fingerprint"
+        ]
+      }
+    ],
+    "local_llm_backends": [
+      {
+        "model": "Qwen2.5-72B",
+        "backend": "vLLM",
+        "quantization": "AWQ"
+      },
+      {
+        "model": "Qwen2.5-32B",
+        "backend": "vLLM",
+        "quantization": "None"
+      },
+      {
+        "model": "Llama-3-8B-Instruct",
+        "backend": "vLLM",
+        "quantization": "None"
+      }
+    ],
+    "dataset_inventory": {
+      "travel": [],
+      "mathqa": [],
+      "auxiliary_train": [],
+      "dev": [],
+      "test": [],
+      "val": []
+    }
+  }
+}

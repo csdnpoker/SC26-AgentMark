@@ -1,0 +1,123 @@
+{
+  "expectations": {
+    "semantic_fault_detected": true,
+    "causal_rollback_used": true,
+    "duplicate_side_effects": 0
+  },
+  "semantic_fault_demo": {
+    "semantic_fault_detected": true,
+    "causal_rollback_used": true,
+    "duplicate_side_effects": 0,
+    "replay_start_step": "step-1",
+    "committed_effects": [],
+    "event_log": [
+      {
+        "step_id": "step-1",
+        "action": "plan",
+        "status": "ok",
+        "external_effect_id": null,
+        "effect_response": null
+      },
+      {
+        "step_id": "step-2",
+        "action": "fetch_flight",
+        "status": "semantic_fault",
+        "rollback_boundary": "step-1"
+      }
+    ]
+  },
+  "exactly_once_demo": {
+    "crash_detected": true,
+    "causal_rollback_used": true,
+    "duplicate_side_effects": 0,
+    "replay_start_step": "step-3",
+    "committed_effects": [
+      "hotel-booking-1",
+      "flight-booking-1"
+    ],
+    "event_log": [
+      {
+        "step_id": "step-1",
+        "status": "ok",
+        "external_effect_id": null,
+        "effect_response": null
+      },
+      {
+        "step_id": "step-2",
+        "status": "ok",
+        "external_effect_id": "hotel-booking-1",
+        "effect_response": "confirmed"
+      },
+      {
+        "step_id": "step-3",
+        "status": "ok",
+        "external_effect_id": "flight-booking-1",
+        "effect_response": "confirmed"
+      },
+      {
+        "step_id": "step-3",
+        "status": "crash_detected",
+        "rollback_boundary": "step-3"
+      },
+      {
+        "step_id": "step-3-replay",
+        "status": "replayed",
+        "external_effect_id": "flight-booking-1",
+        "cache_hit": true
+      },
+      {
+        "step_id": "step-4-replay",
+        "status": "replayed",
+        "external_effect_id": null,
+        "cache_hit": false
+      }
+    ]
+  },
+  "pass": {
+    "semantic_fault_detected": true,
+    "causal_rollback_used": true,
+    "duplicate_side_effects": true
+  },
+  "protocols": [
+    {
+      "name": "HTTP",
+      "usage": "Tool calls and OpenAI-compatible local LLM endpoints",
+      "metadata_fields": []
+    },
+    {
+      "name": "gRPC",
+      "usage": "Fault orchestrator to worker coordination, recovery directives, and ledger subscription events",
+      "metadata_fields": [
+        "agent_id",
+        "workflow_id",
+        "rollback_boundary",
+        "infra_fingerprint"
+      ]
+    }
+  ],
+  "local_llm_backends": [
+    {
+      "model": "Qwen2.5-72B",
+      "backend": "vLLM",
+      "quantization": "AWQ"
+    },
+    {
+      "model": "Qwen2.5-32B",
+      "backend": "vLLM",
+      "quantization": "None"
+    },
+    {
+      "model": "Llama-3-8B-Instruct",
+      "backend": "vLLM",
+      "quantization": "None"
+    }
+  ],
+  "dataset_inventory": {
+    "travel": [],
+    "mathqa": [],
+    "auxiliary_train": [],
+    "dev": [],
+    "test": [],
+    "val": []
+  }
+}

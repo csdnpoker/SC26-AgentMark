@@ -1,0 +1,7 @@
+Method,FDR,TCR
+Erasure Coding,0.0,34.2
+Post Mortem,0.0,34.2
+Service Mesh,12.5,34.5
+Actor Supervision,45.0,41.0
+Agent Heuristic,68.2,52.3
+AgentMark,98.7,96.5

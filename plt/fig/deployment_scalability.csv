@@ -1,0 +1,8 @@
+setting,nodes,agents,throughput_tps,p99_ms
+fixed_nodes_scale_agents,10,10,980,3.1
+fixed_nodes_scale_agents,10,30,2720,5.7
+fixed_nodes_scale_agents,10,50,4510,8.5
+scale_nodes_one_agent_each,10,10,940,3.4
+scale_nodes_one_agent_each,30,30,2790,4.8
+scale_nodes_one_agent_each,50,50,4550,6.1
+scale_nodes_one_agent_each,100,100,8640,9.2

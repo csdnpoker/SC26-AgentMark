@@ -1,0 +1,5 @@
+dataset,actor_supervision_correctness,agent_heuristic_correctness,agentmark_correctness,speedup_over_actor_supervision,speedup_over_agent_heuristic
+GSM8K,75.0,82.0,92.5,1.04,1.83
+MMLU,55.0,62.0,73.3,1.21,1.59
+Itinerary,40.0,48.0,63.9,1.28,4.34
+MIXED,52.0,65.0,81.8,1.74,3.12
