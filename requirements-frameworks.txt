@@ -1,0 +1,4 @@
+langchain>=0.3.0
+langchain-core>=0.3.0
+agentscope>=0.1.0
+redis>=5.0.0

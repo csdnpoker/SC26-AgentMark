@@ -1,0 +1,14 @@
+[
+  {
+    "source": "GSM8K",
+    "sample_count": 100
+  },
+  {
+    "source": "MMLU",
+    "sample_count": 100
+  },
+  {
+    "source": "Itinerary",
+    "sample_count": 100
+  }
+]

@@ -1,0 +1,10 @@
+name: agentmark
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - -r requirements.txt
+    - -r requirements-frameworks.txt
